@@ -1,0 +1,138 @@
+openapi: 3.1.0
+info:
+  title: Shipment API
+  version: 1.0.0
+
+paths:
+  /shipments:
+    post:
+      summary: Create a new shipment
+      tags:
+        - Create Shipment
+      parameters:
+        - name: recipientName
+          in: query
+          description: Full name of the recipient
+          required: true
+          schema:
+            type: string
+        - name: shipmentType
+          in: query
+          description: Type of shipment (PACKAGE, LETTER, PARCEL, POSTCARD)
+          required: true
+          schema:
+            type: integer
+            enum:
+              - 0  # PACKAGE
+              - 1  # LETTER
+              - 2  # PARCEL
+              - 3  # POSTCARD
+        - name: recipientZipCode
+          in: query
+          description: Recipient's ZIP code
+          required: true
+          schema:
+            type: integer
+        - name: recipientAddress
+          in: query
+          description: Recipient's full address
+          required: true
+          schema:
+            type: string
+        - name: postOffice
+          in: query
+          description: ID of the post office where it's took for delivering
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Shipment created successfully
+  /shipments/{shipmentId}/arrive:
+    put:
+      summary: Update shipment status to arrived at a post office
+      tags:
+        - Shipment Status Update
+      parameters:
+        - name: shipmentId
+          in: path
+          required: true
+          description: Unique identifier of the shipment
+          schema:
+            type: integer
+        - in: query
+          name: postOfficeId
+          required: true
+          description: ID of the post office where the shipment has arrived
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Shipment status updated to arrived
+  /shipments/{shipmentId}/left:
+    put:
+      summary: Update shipment status to left from a post office
+      tags:
+        - Shipment Status Update
+      parameters:
+        - in: path
+          name: shipmentId
+          required: true
+          description: Unique identifier of the shipment
+          schema:
+            type: integer
+        - in: query  # Assuming post office ID is sent as a query parameter
+          name: postOfficeId
+          required: true
+          description: ID of the post office from where the shipment has left
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Shipment status updated to left
+  /shipments/{shipmentId}/receive:
+    put:
+      summary: Update shipment status to received and retrieve post office where it's currently located
+      tags:
+        - Shipment Status Update
+      parameters:
+        - in: path
+          name: shipmentId
+          required: true
+          description: Unique identifier of the shipment
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Shipment received successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  postOfficeId:  # Assuming response includes ID instead of name
+                    type: integer
+                    description: ID of the post office where the shipment is currently located
+        '404':
+          description: No history found for shipment
+  /shipments/{shipmentId}/history:
+    get:
+      summary: Get shipment history
+      tags:
+        - Shipment History
+      parameters:
+        - in: path
+          name: shipmentId
+          required: true
+          description: Unique identifier of the shipment
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Shipment history
+          content:
+            text/plain:
+              example:
+                "Shipment Status: DELIVERED\n- Date: 2024-04-19 17:46:29.544, Post Office: South Branch Post Office (10003), Status: REGISTERED\n- Date: 2024-04-19 17:46:31.634, Post Office: Central Post Office (10001), Status: IN_POST_OFFICE\n- Date: 2024-04-19 17:46:33.647, Post Office: Central Post Office (10001), Status: IN_TRANSIT\n- Date: 2024-04-19 17:46:35.436, Post Office: Central Post Office (10001), Status: DELIVERED"
+        '404':
+          description: No history found for shipment
